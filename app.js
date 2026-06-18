@@ -160,7 +160,7 @@ const App = (() => {
 
   function loadSavedQuiz() {
     const saved = sessionStorage.getItem('quizblast_questions');
-    if (saved) questions = JSON.parse(saved);
+    if (saved) questions = JSON.parse(saved).map(q => ({ ...q, correct: Number(q.correct), time: Number(q.time) }));
     if (questions.length === 0) { alert('Nenhum quiz criado! Crie um quiz primeiro.'); return; }
     players.forEach(p => p.score = 0);
     current = 0;
@@ -457,7 +457,7 @@ const App = (() => {
   // Auto-load demo on first visit
   const saved = sessionStorage.getItem('quizblast_questions');
   if (saved) {
-    questions = JSON.parse(saved);
+    questions = JSON.parse(saved).map(q => ({ ...q, correct: Number(q.correct), time: Number(q.time) }));
   } else {
     loadDemo();
   }

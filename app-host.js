@@ -32,7 +32,18 @@ const Host = (() => {
 
   // ── LIBRARY ──
   function getLibrary() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+    try {
+      const lib = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      // Sanitize types in case old data was saved with strings
+      return lib.map(quiz => ({
+        ...quiz,
+        questions: (quiz.questions || []).map(q => ({
+          ...q,
+          correct: Number(q.correct),
+          time:    Number(q.time)
+        }))
+      }));
+    } catch { return []; }
   }
   function saveLibrary(lib) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lib));
@@ -83,7 +94,12 @@ const Host = (() => {
   function loadQuiz(id) {
     const quiz = getLibrary().find(q => q.id === id);
     if (!quiz) return;
-    questions = JSON.parse(JSON.stringify(quiz.questions));
+    // Deep copy and sanitize types
+    questions = JSON.parse(JSON.stringify(quiz.questions)).map(q => ({
+      ...q,
+      correct: Number(q.correct),
+      time:    Number(q.time)
+    }));
     currentQuizId = id;
     document.getElementById('quiz-name-input').value = quiz.name;
     clearForm(); renderQuestionsList();
@@ -94,7 +110,12 @@ const Host = (() => {
   function loadAndPlay(id) {
     const quiz = getLibrary().find(q => q.id === id);
     if (!quiz) return;
-    questions = JSON.parse(JSON.stringify(quiz.questions));
+    // Deep copy and sanitize types
+    questions = JSON.parse(JSON.stringify(quiz.questions)).map(q => ({
+      ...q,
+      correct: Number(q.correct),
+      time:    Number(q.time)
+    }));
     currentQuizId = id;
     goToLobby();
   }
@@ -184,13 +205,10 @@ const Host = (() => {
     const opts = ['opt-a','opt-b','opt-c','opt-d'].map(id => document.getElementById(id).value.trim());
     if (!text || opts.some(o => !o)) { alert('Preencha a pergunta e todas as opções!'); return; }
     const explanation = document.getElementById('q-explanation').value.trim();
-    const image = clearForm._imageData !== undefined ? clearForm._imageData : null;
-    const q = {
-      text, options: opts,
-      correct: parseInt(document.getElementById('q-correct').value),
-      time:    parseInt(document.getElementById('q-time').value),
-      image, explanation
-    };
+    const image   = clearForm._imageData !== undefined ? clearForm._imageData : null;
+    const correct = Number(document.getElementById('q-correct').value);
+    const time    = Number(document.getElementById('q-time').value);
+    const q = { text, options: opts, correct, time, image, explanation };
     if (clearForm._editingIndex >= 0) {
       questions[clearForm._editingIndex] = q;
     } else {
@@ -207,8 +225,8 @@ const Host = (() => {
     document.getElementById('opt-b').value             = q.options[1];
     document.getElementById('opt-c').value             = q.options[2];
     document.getElementById('opt-d').value             = q.options[3];
-    document.getElementById('q-correct').value         = q.correct;
-    document.getElementById('q-time').value            = q.time;
+    document.getElementById('q-correct').value         = String(q.correct);
+    document.getElementById('q-time').value            = String(q.time);
     document.getElementById('q-explanation').value     = q.explanation || '';
     document.getElementById('form-title').textContent  = '✏️ Editando Pergunta ' + (i + 1);
     // Restore image preview
