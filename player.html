@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>QuizBlast 🚀 — Jogador</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body class="player-body">
+
+  <!-- TELA DE ENTRADA -->
+  <div id="screen-join" class="screen active">
+    <div class="join-container">
+      <div class="logo">⚡ QuizBlast</div>
+      <div class="card join-card">
+        <h2>Entrar na Sala</h2>
+        <div id="conn-status" class="conn-status" style="display:none"></div>
+        <input type="text" id="room-code-input" placeholder="Código da sala..." maxlength="20"
+               oninput="this.value=this.value.toUpperCase()"/>
+        <input type="text" id="player-name-input" placeholder="Seu nome..."/>
+        <button class="btn btn-primary btn-full" onclick="Player.join()">🎮 Entrar!</button>
+      </div>
+      <p class="join-hint">💡 Peça o código para quem está no host</p>
+    </div>
+  </div>
+
+  <!-- TELA DE ESPERA -->
+  <div id="screen-waiting" class="screen">
+    <div class="waiting-container">
+      <div class="waiting-icon">🎯</div>
+      <h2>Você entrou!</h2>
+      <p id="waiting-name" class="waiting-name"></p>
+      <div class="waiting-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="waiting-text">Aguardando o host iniciar o quiz...</p>
+      <div id="player-list-waiting" class="player-list-waiting"></div>
+    </div>
+  </div>
+
+  <!-- TELA DE RESPOSTA -->
+  <div id="screen-answer" class="screen">
+    <div class="answer-container">
+      <div class="player-timer-bar">
+        <div id="timer-bar-fill" class="timer-bar-fill"></div>
+      </div>
+      <div class="question-box player-question-box">
+        <div id="player-question-image-wrap" class="question-image-wrap hidden">
+          <img id="player-question-image" class="question-image" alt="Imagem da questão"/>
+        </div>
+        <p id="player-question-text">Pergunta...</p>
+      </div>
+      <div class="answers-grid player-answers" id="player-answers-grid"></div>
+      <div id="player-question-explanation" class="question-explanation hidden"></div>
+      <div id="player-waiting-host" class="waiting-for-host hidden">
+        <span>⏳</span><span>Aguardando o host avançar...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE FEEDBACK -->
+  <div id="screen-feedback" class="screen">
+    <div class="feedback-container">
+      <div id="feedback-icon" class="feedback-icon">✅</div>
+      <h2 id="feedback-title">Correto!</h2>
+      <p id="feedback-points" class="feedback-points">+1200 pts</p>
+      <p id="feedback-position" class="feedback-position">🏅 Você está em 2º lugar</p>
+      <div class="waiting-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="waiting-text">Aguardando próxima pergunta...</p>
+    </div>
+  </div>
+
+  <!-- TELA DE PÓDIO (PLAYER) -->
+  <div id="screen-podium-player" class="screen">
+    <div class="podium-container">
+      <h1 class="podium-title">🏆 Fim do Quiz!</h1>
+      <div class="podium" id="podium-player"></div>
+      <div id="my-result" class="my-result"></div>
+      <button class="btn btn-primary btn-full" onclick="Player.goHome()">🏠 Início</button>
+    </div>
+  </div>
+
+  <script src="app-player.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuizBlast 🚀</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TELA INICIAL -->
+  <div id="screen-home" class="screen active">
+    <div class="home-container">
+      <div class="logo">⚡ QuizBlast</div>
+      <p class="tagline">O quiz mais explosivo do universo!</p>
+      <button class="btn btn-primary" onclick="App.goToSetup()">Criar Quiz</button>
+      <button class="btn btn-secondary" onclick="App.goToPlay()">Jogar Quiz</button>
+    </div>
+  </div>
+
+  <!-- TELA DE CONFIGURAÇÃO (CRIAR QUIZ) -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-container">
+      <h2>⚙️ Configurar Quiz</h2>
+
+      <div id="questions-list"></div>
+
+      <div class="question-form card">
+        <h3 id="form-title">➕ Nova Pergunta</h3>
+        <input type="text" id="q-text" placeholder="Digite a pergunta..." />
+
+        <div class="options-grid">
+          <input type="text" id="opt-a" placeholder="Opção A" class="opt opt-a" />
+          <input type="text" id="opt-b" placeholder="Opção B" class="opt opt-b" />
+          <input type="text" id="opt-c" placeholder="Opção C" class="opt opt-c" />
+          <input type="text" id="opt-d" placeholder="Opção D" class="opt opt-d" />
+        </div>
+
+        <div class="form-row">
+          <label>Resposta correta:</label>
+          <select id="q-correct">
+            <option value="0">A</option>
+            <option value="1">B</option>
+            <option value="2">C</option>
+            <option value="3">D</option>
+          </select>
+
+          <label>Tempo (seg):</label>
+          <select id="q-time">
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+            <option value="15">15s</option>
+            <option value="20" selected>20s</option>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
+          </select>
+        </div>
+
+        <div class="image-upload-row">
+          <label class="image-upload-label">🖼️ Imagem da questão (opcional):</label>
+          <div class="image-upload-area" id="image-upload-area" onclick="document.getElementById('q-image').click()">
+            <span id="image-upload-placeholder">📁 Clique para escolher uma imagem</span>
+            <img id="q-image-preview" class="q-image-preview hidden" alt="Preview"/>
+          </div>
+          <input type="file" id="q-image" accept="image/*" style="display:none" onchange="App.previewImage(this)"/>
+          <button class="btn-remove-image hidden" id="btn-remove-image" onclick="App.removeImage()">✕ Remover imagem</button>
+        </div>
+
+        <div class="explanation-row">
+          <label>💡 Explicação (exibida após a resposta):</label>
+          <textarea id="q-explanation" placeholder="Explique o porquê da resposta correta..." rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-add" onclick="App.addQuestion()">✅ Adicionar Pergunta</button>
+          <button class="btn btn-clear" onclick="App.clearForm()">🗑️ Limpar</button>
+        </div>
+      </div>
+
+      <div class="setup-actions">
+        <button class="btn btn-back" onclick="App.goHome()">← Voltar</button>
+        <button class="btn btn-start" onclick="App.startGame()" id="btn-start-game" disabled>🚀 Iniciar Quiz!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE JOGADORES -->
+  <div id="screen-players" class="screen">
+    <div class="players-container">
+      <h2>👥 Adicionar Jogadores</h2>
+      <div class="player-input-row">
+        <input type="text" id="player-name" placeholder="Nome do jogador..." onkeydown="if(event.key==='Enter') App.addPlayer()" />
+        <button class="btn btn-add" onclick="App.addPlayer()">+ Adicionar</button>
+      </div>
+      <div id="players-list" class="players-list"></div>
+      <div class="setup-actions">
+        <button class="btn btn-back" onclick="App.goHome()">← Voltar</button>
+        <button class="btn btn-start" id="btn-play-start" onclick="App.loadSavedQuiz()" disabled>🎮 Jogar!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DO QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-header">
+      <div class="quiz-info">
+        <span id="q-counter">Pergunta 1/5</span>
+        <span id="q-score-display">⭐ 0 pts</span>
+      </div>
+      <div class="timer-wrap">
+        <svg class="timer-svg" viewBox="0 0 100 100">
+          <circle class="timer-bg" cx="50" cy="50" r="45"/>
+          <circle class="timer-ring" id="timer-ring" cx="50" cy="50" r="45"/>
+        </svg>
+        <span id="timer-text">20</span>
+      </div>
+    </div>
+
+    <div class="question-box">
+      <div id="question-image-wrap" class="question-image-wrap hidden">
+        <img id="question-image" class="question-image" alt="Imagem da questão"/>
+      </div>
+      <p id="question-text">Pergunta aqui...</p>
+    </div>
+
+    <div class="answers-grid" id="answers-grid"></div>
+
+    <div id="answer-feedback" class="answer-feedback hidden"></div>
+    <div id="question-explanation" class="question-explanation hidden"></div>
+  </div>
+
+  <!-- TELA DE PLACAR PARCIAL -->
+  <div id="screen-scoreboard" class="screen">
+    <div class="scoreboard-container">
+      <h2>📊 Placar Parcial</h2>
+      <div id="scoreboard-list" class="scoreboard-list"></div>
+      <button class="btn btn-primary" onclick="App.nextQuestion()">Próxima Pergunta ➡️</button>
+    </div>
+  </div>
+
+  <!-- TELA DE PÓDIO FINAL -->
+  <div id="screen-podium" class="screen">
+    <div class="podium-container">
+      <h1 class="podium-title">🏆 Resultado Final!</h1>
+      <div class="podium" id="podium"></div>
+      <div id="full-ranking" class="full-ranking"></div>
+      <div class="podium-actions">
+        <button class="btn btn-primary" onclick="App.playAgain()">🔄 Jogar Novamente</button>
+        <button class="btn btn-secondary" onclick="App.goHome()">🏠 Início</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

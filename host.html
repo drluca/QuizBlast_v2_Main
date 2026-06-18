@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuizBlast 🚀 — Host</title>
+  <link rel="stylesheet" href="style.css"/>
+  <!-- PeerJS para comunicação P2P -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- QRCode -->
+  <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div id="screen-login" class="screen active">
+    <div class="login-container">
+      <div class="logo">⚡ QuizBlast</div>
+      <p class="tagline">Área do Host</p>
+      <div class="login-card card">
+        <div id="login-error" class="login-error hidden">❌ Usuário ou senha incorretos</div>
+        <div class="login-field">
+          <label>Usuário</label>
+          <input type="text" id="login-user" placeholder="Digite seu usuário..."
+                 onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()"/>
+        </div>
+        <div class="login-field">
+          <label>Senha</label>
+          <div class="pass-wrap">
+            <input type="password" id="login-pass" placeholder="Digite sua senha..."
+                   onkeydown="if(event.key==='Enter') Auth.login()"/>
+            <button class="btn-eye" onclick="Auth.togglePass()" id="btn-eye" title="Mostrar senha">👁️</button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="Auth.login()">🔐 Entrar</button>
+        <p class="login-hint">Primeira vez? As credenciais padrão são <strong>admin / admin123</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA INICIAL -->
+  <div id="screen-home" class="screen">
+    <div class="home-container">
+      <div class="logo">⚡ QuizBlast</div>
+      <p class="tagline">O quiz mais explosivo do universo!</p>
+      <button class="btn btn-primary" onclick="Host.goToLibrary()">📚 Minha Biblioteca</button>
+      <button class="btn btn-secondary" onclick="Host.goToLobby()">🎮 Iniciar Sala</button>
+      <div class="home-footer">
+        <span id="home-username" class="home-username"></span>
+        <button class="btn-text-link" onclick="Auth.goToChangePass()">🔑 Trocar senha</button>
+        <button class="btn-text-link btn-logout" onclick="Auth.logout()">🚪 Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA TROCAR SENHA -->
+  <div id="screen-change-pass" class="screen">
+    <div class="login-container">
+      <div class="logo" style="font-size:2.5rem">🔑</div>
+      <p class="tagline">Trocar Senha</p>
+      <div class="login-card card">
+        <div id="change-error"   class="login-error  hidden"></div>
+        <div id="change-success" class="login-success hidden"></div>
+        <div class="login-field">
+          <label>Senha atual</label>
+          <input type="password" id="cp-current" placeholder="Senha atual..."/>
+        </div>
+        <div class="login-field">
+          <label>Nova senha</label>
+          <input type="password" id="cp-new" placeholder="Nova senha (mín. 6 caracteres)..."/>
+        </div>
+        <div class="login-field">
+          <label>Confirmar nova senha</label>
+          <input type="password" id="cp-confirm" placeholder="Repita a nova senha..."/>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="Auth.changePassword()">✅ Salvar Nova Senha</button>
+        <button class="btn btn-back btn-full" style="margin-top:.5rem" onclick="Auth.backToHome()">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA BIBLIOTECA -->
+  <div id="screen-library" class="screen">
+    <div class="library-container">
+      <h2>📚 Minha Biblioteca</h2>
+      <div class="library-toolbar">
+        <button class="btn btn-add" onclick="Host.newQuiz()">➕ Novo Quiz</button>
+      </div>
+      <div id="library-list" class="library-list"></div>
+      <div class="setup-actions" style="justify-content:flex-start">
+        <button class="btn btn-back" onclick="Host.goHome()">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE CONFIGURAÇÃO -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-container">
+      <div class="setup-title-row">
+        <h2>⚙️ Configurar Quiz</h2>
+        <div class="quiz-name-wrap">
+          <input type="text" id="quiz-name-input" placeholder="Nome do quiz..." class="quiz-name-input"/>
+          <button class="btn btn-save" onclick="Host.saveQuiz()">💾 Salvar</button>
+        </div>
+      </div>
+      <div id="questions-list"></div>
+      <div class="question-form card">
+        <h3 id="form-title">➕ Nova Pergunta</h3>
+        <input type="text" id="q-text" placeholder="Digite a pergunta..."/>
+        <div class="options-grid">
+          <input type="text" id="opt-a" placeholder="Opção A" class="opt opt-a"/>
+          <input type="text" id="opt-b" placeholder="Opção B" class="opt opt-b"/>
+          <input type="text" id="opt-c" placeholder="Opção C" class="opt opt-c"/>
+          <input type="text" id="opt-d" placeholder="Opção D" class="opt opt-d"/>
+        </div>
+        <div class="form-row">
+          <label>Resposta correta:</label>
+          <select id="q-correct">
+            <option value="0">A</option><option value="1">B</option>
+            <option value="2">C</option><option value="3">D</option>
+          </select>
+          <label>Tempo (seg):</label>
+          <select id="q-time">
+            <option value="5">5s</option><option value="10">10s</option>
+            <option value="15">15s</option><option value="20" selected>20s</option>
+            <option value="30">30s</option><option value="60">60s</option>
+          </select>
+        </div>
+        <div class="image-upload-row">
+          <label class="image-upload-label">🖼️ Imagem da questão (opcional):</label>
+          <div class="image-upload-area" id="image-upload-area" onclick="document.getElementById('q-image').click()">
+            <span id="image-upload-placeholder">📁 Clique para escolher uma imagem</span>
+            <img id="q-image-preview" class="q-image-preview hidden" alt="Preview"/>
+          </div>
+          <input type="file" id="q-image" accept="image/*" style="display:none" onchange="Host.previewImage(this)"/>
+          <button class="btn-remove-image hidden" id="btn-remove-image" onclick="Host.removeImage()">✕ Remover imagem</button>
+        </div>
+        <div class="explanation-row">
+          <label>💡 Explicação (exibida após a resposta):</label>
+          <textarea id="q-explanation" placeholder="Explique o porquê da resposta correta..." rows="3"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-add" onclick="Host.addQuestion()">✅ Adicionar</button>
+          <button class="btn btn-clear" onclick="Host.clearForm()">🗑️ Limpar</button>
+        </div>
+      </div>
+      <div class="setup-actions">
+        <button class="btn btn-back" onclick="Host.goToLibrary()">← Biblioteca</button>
+        <button class="btn btn-start" onclick="Host.goToLobby()" id="btn-to-lobby" disabled>🚀 Abrir Sala</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE LOBBY (QR CODE + JOGADORES) -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-container">
+      <h2>🎯 Sala de Espera</h2>
+
+      <div class="lobby-main">
+        <div class="qr-section card">
+          <p class="qr-label">Escaneie para entrar:</p>
+          <div id="qrcode"></div>
+          <div class="room-code-wrap">
+            <span class="room-code-label">Código da sala:</span>
+            <span id="room-code-display" class="room-code">...</span>
+          </div>
+          <p class="qr-hint">📱 Abra a câmera do celular e aponte para o QR Code</p>
+          <div id="peer-status" class="peer-status connecting">⏳ Conectando...</div>
+        </div>
+
+        <div class="players-section">
+          <h3>👥 Jogadores (<span id="player-count">0</span>)</h3>
+          <div id="lobby-players" class="lobby-players"></div>
+        </div>
+      </div>
+
+      <div class="lobby-actions">
+        <button class="btn btn-back" onclick="Host.goHome()">← Sair</button>
+        <button class="btn btn-start" id="btn-start-quiz" onclick="Host.startQuiz()" disabled>
+          🚀 Iniciar Quiz!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DO QUIZ (HOST) -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-host-container">
+      <div class="quiz-header">
+        <span id="q-counter">Pergunta 1/5</span>
+        <div class="timer-wrap">
+          <svg class="timer-svg" viewBox="0 0 100 100">
+            <circle class="timer-bg" cx="50" cy="50" r="45"/>
+            <circle class="timer-ring" id="timer-ring" cx="50" cy="50" r="45"/>
+          </svg>
+          <span id="timer-text">20</span>
+        </div>
+        <span id="answers-received">0/0 responderam</span>
+      </div>
+
+      <div class="question-box">
+        <div id="question-image-wrap" class="question-image-wrap hidden">
+          <img id="question-image" class="question-image" alt="Imagem da questão"/>
+        </div>
+        <p id="question-text">Pergunta aqui...</p>
+      </div>
+
+      <div class="answers-grid" id="answers-grid"></div>
+
+      <div id="answer-feedback" class="answer-feedback hidden"></div>
+      <div id="question-explanation" class="question-explanation hidden"></div>
+      <button id="btn-reveal-scoreboard" class="btn btn-start btn-reveal-scoreboard hidden" onclick="Host.hostShowScoreboard()">
+        📊 Ver Placar
+      </button>
+    </div>
+  </div>
+
+  <!-- TELA DE PLACAR PARCIAL -->
+  <div id="screen-scoreboard" class="screen">
+    <div class="scoreboard-container">
+      <h2>📊 Placar Parcial</h2>
+      <div id="scoreboard-list" class="scoreboard-list"></div>
+      <button class="btn btn-primary" id="btn-next">Próxima Pergunta ➡️</button>
+    </div>
+  </div>
+
+  <!-- TELA DE PÓDIO FINAL -->
+  <div id="screen-podium" class="screen">
+    <div class="podium-container">
+      <h1 class="podium-title">🏆 Resultado Final!</h1>
+      <div class="podium" id="podium"></div>
+      <div id="full-ranking" class="full-ranking"></div>
+      <div class="podium-actions">
+        <button class="btn btn-primary" onclick="Host.playAgain()">🔄 Jogar Novamente</button>
+        <button class="btn btn-secondary" onclick="Host.goHome()">🏠 Início</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app-host.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
